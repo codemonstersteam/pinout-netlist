@@ -1,0 +1,124 @@
+openapi: 3.0.3
+info:
+  title: pinout-netlist API
+  version: 0.1.0
+  description: >
+    Координатор графа связей сервисов. Принимает отчёты валидаторов в общем
+    формате экосистемы, отдаёт граф и оценку влияния изменения контракта.
+    Контракт-первый (skill component-tests); реализация — эпик E2.
+
+paths:
+  /reports:
+    post:
+      operationId: ingestReport
+      summary: Принять отчёт валидатора (срез 01)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ValidatorReport' }
+      responses:
+        '202': { description: Отчёт принят, граф обновлён }
+        '400': { description: BAD_REPORT — невалидный отчёт }
+        '409': { description: UNSUPPORTED_SCHEMA_VERSION — неподдержанная версия формата }
+
+  /graph:
+    get:
+      operationId: queryGraph
+      summary: Текущий граф пар consumer↔provider (срез 02)
+      responses:
+        '200':
+          description: Граф
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [edges]
+                properties:
+                  edges:
+                    type: array
+                    items: { $ref: '#/components/schemas/Edge' }
+
+  /impact:
+    post:
+      operationId: assessImpact
+      summary: Кого затронет новая версия спеки поставщика (срез 03)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, to_version]
+              properties:
+                provider: { type: string }
+                to_version: { type: string, description: коммит/тег новой master-спеки }
+      responses:
+        '200':
+          description: Оценка влияния
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BreakingChange' }
+
+components:
+  schemas:
+    # Канон: ../../pinout-openapi/docs/report-format.md
+    ValidatorReport:
+      type: object
+      required: [schema_version, validator, interaction, consumer, provider, compatible, verdicts]
+      properties:
+        schema_version: { type: string, example: "1.0" }
+        validator: { type: string, enum: [pinout-openapi, pinout-asyncapi] }
+        interaction: { type: string, enum: [sync, async] }
+        consumer: { $ref: '#/components/schemas/Party' }
+        provider: { $ref: '#/components/schemas/Party' }
+        compatible: { type: boolean }
+        verdicts:
+          type: array
+          items: { $ref: '#/components/schemas/Verdict' }
+        generated_at: { type: string, format: date-time }
+    Party:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        spec_ref: { type: string }
+        version: { type: string }
+    Verdict:
+      type: object
+      required: [subject, compatible]
+      properties:
+        subject: { type: string, description: "sync: METHOD /path; async: канал/операция" }
+        compatible: { type: boolean }
+        errors:
+          type: array
+          items: { $ref: '#/components/schemas/ValidationError' }
+    ValidationError:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        location: { type: string }
+        context: { type: object, additionalProperties: true }
+    Edge:
+      type: object
+      required: [consumer, provider, subject, interaction]
+      properties:
+        consumer: { type: string }
+        provider: { type: string }
+        subject: { type: string }
+        interaction: { type: string, enum: [sync, async] }
+    BreakingChange:
+      type: object
+      required: [provider, affected_consumers]
+      properties:
+        provider: { type: string }
+        from_version: { type: string }
+        to_version: { type: string }
+        affected_consumers:
+          type: array
+          items: { type: string }
+        details:
+          type: array
+          items: { $ref: '#/components/schemas/ValidationError' }
