@@ -4,7 +4,9 @@
 
 ## Методология: скиллы service-template (по ссылке, не копируем)
 
-Те же скиллы и порядок, что и в `pinout-openapi`. Источник — upstream [ubik-life/service-template](https://github.com/ubik-life/service-template/), локальных копий не держим.
+> Точка входа агента — [`AGENTS.md`](./AGENTS.md) (там же блок «Resume here»).
+
+Те же скиллы и порядок, что и в `pinout-openapi`. Источник — upstream [ubik-life/service-template](https://github.com/ubik-life/service-template/), локальных копий не держим. **Закреплённый коммит: `5ad8347c38ea7f07bd0620ebeef5030ca3431efd`** (2026-06-17) — при расхождении с `main` использовать его.
 
 | Этап | Скилл | Ссылка |
 |---|---|---|
