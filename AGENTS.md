@@ -6,9 +6,9 @@
 
 Координатор графа связей сервисов: принимает отчёты валидаторов в [общем формате](../pinout-openapi/docs/report-format.md), строит граф `consumer↔provider`, детектит breaking-change во времени. Концепт: [`../pinout/README.md`](../pinout/README.md). Эпик **E2** в [`../pinout/backlog.md`](../pinout/backlog.md). Это сетевой сервис (в отличие от CLI `pinout-openapi`).
 
-## Методология (скиллы, закреплённая версия)
+## Разработка: харнес izi
 
-Скиллы [ubik-life/service-template](https://github.com/ubik-life/service-template/). **Закреплённый коммит: `5ad8347c38ea7f07bd0620ebeef5030ca3431efd`** (зафиксирован 2026-06-17). По ссылке, не копируем. Правила — в [`CLAUDE.md`](./CLAUDE.md).
+Разработку ведёт **харнес `izi`** ([rationaldev-ai-sdlc-skills](https://github.com/codemonstersteam/rationaldev-ai-sdlc-skills/)) — его скиллы. Правила — в [`CLAUDE.md`](./CLAUDE.md).
 
 ## Resume here — откуда продолжить
 
