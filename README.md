@@ -22,7 +22,7 @@
 
 ## Методология
 
-Разработка по скиллам [service-template](https://github.com/ubik-life/service-template/) — см. [`CLAUDE.md`](./CLAUDE.md). Проектирование — [`docs/design/`](./docs/design/).
+Разработка по скиллам [скиллы харнеса izi](https://github.com/codemonstersteam/rationaldev-ai-sdlc-skills/) — см. [`CLAUDE.md`](./CLAUDE.md). Проектирование — [`docs/design/`](./docs/design/).
 
 ## Лицензия
 

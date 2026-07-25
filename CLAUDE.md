@@ -2,19 +2,19 @@
 
 Координатор графа связей сервисов. Концепт: [../pinout/README.md](../pinout/README.md). Эпик E2 в [бэклоге экосистемы](../pinout/backlog.md).
 
-## Методология: скиллы service-template (по ссылке, не копируем)
+## Разработка: харнес izi (rationaldev-ai-sdlc-skills)
 
 > Точка входа агента — [`AGENTS.md`](./AGENTS.md) (там же блок «Resume here»).
 
-Те же скиллы и порядок, что и в `pinout-openapi`. Источник — upstream [ubik-life/service-template](https://github.com/ubik-life/service-template/), локальных копий не держим. **Закреплённый коммит: `5ad8347c38ea7f07bd0620ebeef5030ca3431efd`** (2026-06-17) — при расхождении с `main` использовать его.
+Разработку ведёт **харнес `izi`** ([rationaldev-ai-sdlc-skills](https://github.com/codemonstersteam/rationaldev-ai-sdlc-skills/)) — его скиллы, те же и в том же порядке, что и в `pinout-openapi`. Локальных копий не держим.
 
 | Этап | Скилл | Ссылка |
 |---|---|---|
-| Документация | `documentation` | https://github.com/ubik-life/service-template/tree/main/skills/documentation |
-| Проверка качества доков | `doc-quality-review` | https://github.com/ubik-life/service-template/tree/main/skills/doc-quality-review |
-| Проектирование | `program-design` | https://github.com/ubik-life/service-template/tree/main/skills/program-design |
-| Компонентные тесты | `component-tests` | https://github.com/ubik-life/service-template/tree/main/skills/component-tests |
-| Реализация | `program-implementation` | https://github.com/ubik-life/service-template/tree/main/skills/program-implementation |
+| Документация | `documentation` | https://github.com/codemonstersteam/rationaldev-ai-sdlc-skills/tree/main/skills/lib/documentation |
+| Проверка качества доков | `doc-quality-review` | https://github.com/codemonstersteam/rationaldev-ai-sdlc-skills/tree/main/skills/lib/doc-quality-review |
+| Проектирование | `program-design` | https://github.com/codemonstersteam/rationaldev-ai-sdlc-skills/tree/main/skills/lib/program-design |
+| Компонентные тесты | `component-tests` | https://github.com/codemonstersteam/rationaldev-ai-sdlc-skills/tree/main/skills/lib/component-tests |
+| Реализация | `program-implementation` | https://github.com/codemonstersteam/rationaldev-ai-sdlc-skills/tree/main/skills/lib/program-implementation |
 
 Ключевые правила — см. выжимку в `pinout-openapi/CLAUDE.md` (vertical slice, бизнес-логика ≠ I/O, конструкторы вместо guard, head-труба на `Result`, юниты только для логики).
 
