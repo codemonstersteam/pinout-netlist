@@ -16,8 +16,10 @@ import (
 	"time"
 
 	"pinout-netlist/internal/graph"
+	"pinout-netlist/internal/impact"
 	"pinout-netlist/internal/ingest"
 	"pinout-netlist/internal/shared/config"
+	"pinout-netlist/internal/shared/specloader"
 	"pinout-netlist/internal/shared/store"
 )
 
@@ -55,6 +57,7 @@ func main() {
 
 	st := store.New(cfg.StoreFile)
 	ingestDeps := ingest.NewDeps(st)
+	impactDeps := impact.NewDeps(specloader.NewLoader(impact.DefaultLoaderTimeout), st)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
@@ -74,7 +77,7 @@ func main() {
 		}
 		accepted, err := ingest.ProcessIngest(ingest.IngestRequest{Body: body}, ingestDeps)
 		if err != nil {
-			writeError(w, ingest.HTTPStatus(err), err.Error(), "report rejected")
+			writeError(w, ingest.HTTPStatus(err), ingest.ErrorCode(err), err.Error())
 			return
 		}
 		writeJSON(w, http.StatusAccepted, accepted)
@@ -87,6 +90,25 @@ func main() {
 			return
 		}
 		writeJSON(w, http.StatusOK, graph.ProcessGraph(graph.Deps{Store: st}))
+	})
+
+	// Срез 03: POST /impact — кого сломает новая версия спеки поставщика.
+	mux.HandleFunc("/impact", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "POST only")
+			return
+		}
+		body, err := io.ReadAll(io.LimitReader(r.Body, 50<<20))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "BAD_REQUEST", err.Error())
+			return
+		}
+		bc, err := impact.ProcessImpact(impact.ImpactRequest{Body: body}, impactDeps)
+		if err != nil {
+			writeError(w, impact.HTTPStatus(err), impact.ErrorCode(err), err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, bc)
 	})
 
 	// Placeholder: все прочие маршруты → 501, пока их срезы не реализованы.

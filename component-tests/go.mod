@@ -1,6 +1,6 @@
 module pinout-netlist/component-tests
 
-go 1.25
+go 1.26.0
 
 require github.com/cucumber/godog v0.14.1
 

@@ -8,6 +8,8 @@ services:
       dockerfile: component-tests/compose/service.Dockerfile
     environment:
       PORT: "8080"
+    volumes:
+      - ./fixtures:/fixtures:ro
     expose: ["8080"]
     networks: [test-net]
   runner:

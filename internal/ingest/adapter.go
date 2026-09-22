@@ -40,3 +40,15 @@ func HTTPStatus(err error) int {
 		return http.StatusInternalServerError // 500 (хранилище и пр.)
 	}
 }
+
+// ErrorCode — чистый код сентинела для error.code ответа (детали — в message).
+func ErrorCode(err error) string {
+	switch {
+	case errors.Is(err, ErrUnsupportedSchemaVersion):
+		return "UNSUPPORTED_SCHEMA_VERSION"
+	case errors.Is(err, ErrBadReport):
+		return "BAD_REPORT"
+	default:
+		return "INTERNAL"
+	}
+}
