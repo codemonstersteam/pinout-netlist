@@ -1,0 +1,256 @@
+openapi: 3.0.3
+info:
+  title: pinout-netlist API
+  version: 1.0.0
+  description: >
+    Координатор графа связей сервисов экосистемы pinout. Принимает отчёты валидаторов
+    в общем формате (канон 1.1 — pinout-openapi/docs/report-format.md), хранит граф
+    consumer↔provider с историей вердиктов, и отвечает на вопрос «кто сломается,
+    если поставщик изменит контракт» (breaking-change во времени, через oasdiff).
+    Контракт-первый; реализация — эпик E2.
+  x-frozen: 2026-09-22
+  x-slices: [slice-01-ingest-report, slice-02-query-graph, slice-03-diff-breaking-change]
+
+paths:
+  /reports:
+    post:
+      operationId: ingestReport
+      summary: Принять отчёт валидатора (срез 01)
+      description: >
+        Один reader на оба валидатора: различия sync/async только в полях
+        validator/interaction/uncovered_*. Тело — конверт {report, subjects?}:
+        совместимый отчёт (errors==[]) не несёт субъектов, поэтому перечень
+        потребляемых операций/каналов даёт вызывающий (CI потребителя знает свой
+        scope); при отсутствии subjects рёбра выводятся из error-субъектов и
+        uncovered_*. Рёбра = subjects ∪ error-субъекты ∪ uncovered_*. Отчёты
+        exit 2/3 вердиктом не являются и не принимаются.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/IngestReportRequest' }
+      responses:
+        '202':
+          description: Отчёт принят, граф и история версий обновлены
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IngestAccepted' }
+        '400':
+          description: BAD_REPORT — тело не является каноническим отчётом 1.1 (битый JSON, отсутствуют обязательные поля идентичности/provenance, exit-3-конверт без provenance)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: UNSUPPORTED_SCHEMA_VERSION — schema_version не "1.1"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /graph:
+    get:
+      operationId: queryGraph
+      summary: Текущий граф пар consumer↔provider (срез 02)
+      description: >
+        Рёбра несут последний вердикт: compatible ребра = «в последнем отчёте нет
+        ошибки с этим субъектом» (агрегатный compatible отчёта разложен по субъектам).
+      responses:
+        '200':
+          description: Граф (пустой граф — edges: [])
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Graph' }
+
+  /impact:
+    post:
+      operationId: assessImpact
+      summary: Кого затронет новая версия спеки поставщика (срез 03)
+      description: >
+        netlist спеки не хранит: обе версии (старую и новую) передаёт вызывающий
+        (CI поставщика знает, где они лежат). Диф old→new — oasdiff (honest reuse);
+        затронутые субъекты → по графу живущие потребители, чьи рёбра задеты.
+        from_version берётся из последнего вердикта в хранилище. MVP: sync
+        (OpenAPI) поставщики; async-impact отложен (backlog).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ImpactRequest' }
+      responses:
+        '200':
+          description: Оценка влияния (пустой affected_consumers = изменение не задело живущих потребителей)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BreakingChange' }
+        '400':
+          description: BAD_REQUEST — запрос не соответствует схеме (нет provider/sources, source не exactly-one)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: SPEC_NOT_FOUND — источник спеки недоступен (файл отсутствует / HTTP не 2xx)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          description: SPEC_INVALID — спека по источнику не парсится как OpenAPI 3.x
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '501':
+          description: ASYNC_IMPACT_NOT_IMPLEMENTED — поставщик async (AsyncAPI-спека); вынесено в backlog E2
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+  schemas:
+    # ── Канон 1.1: pinout-openapi/docs/report-format.md ─────────────────────────
+    ValidatorReport:
+      type: object
+      additionalProperties: false
+      required: [schema_version, validator, interaction, consumer, generated_at, compatible, provenance, errors]
+      properties:
+        schema_version: { type: string, const: "1.1" }
+        validator: { type: string, enum: [pinout-openapi, pinout-asyncapi] }
+        interaction: { type: string, enum: [sync, async] }
+        consumer:
+          type: object
+          additionalProperties: false
+          required: [name]
+          properties:
+            name: { type: string, minLength: 1 }
+            version: { type: string, minLength: 1 }
+        generated_at: { type: string, format: date-time }
+        compatible: { type: boolean, description: Агрегатный вердикт (инвариант compatible ⇔ errors == []) }
+        provenance: { $ref: '#/components/schemas/Provenance' }
+        errors:
+          type: array
+          items: { $ref: '#/components/schemas/ReportError' }
+        uncovered_operations:
+          type: array
+          items: { type: string }
+        uncovered_channels:
+          type: array
+          items: { type: string }
+
+    Provenance:
+      type: object
+      additionalProperties: false
+      required: [provider, provider_version, captured_hash]
+      description: Единственный источник идентичности поставщика (канон 1.1); отдельного provider{} нет.
+      properties:
+        provider: { type: string, minLength: 1 }
+        provider_version: { type: string }
+        captured_hash: { type: string, pattern: '^sha256:' }
+
+    ReportError:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        subject: { type: string, description: 'О чём нарушение: sync `METHOD /path`; async `<channel> <direction> <message>`' }
+        location: { type: string }
+        details: { type: string }
+        context: { type: object, additionalProperties: true }
+
+    # ── Срез 01: ingest ─────────────────────────────────────────────────────────
+    IngestReportRequest:
+      type: object
+      additionalProperties: false
+      required: [report]
+      properties:
+        report: { $ref: '#/components/schemas/ValidatorReport' }
+        subjects:
+          type: array
+          description: Перечень потребляемых субъектов потребителя (scope); рёбра графа = subjects ∪ error-субъекты ∪ uncovered_*.
+          items: { type: string, minLength: 1 }
+
+    IngestAccepted:
+      type: object
+      additionalProperties: false
+      required: [edges_accepted]
+      properties:
+        edges_accepted: { type: integer, description: Сколько рёбер создано/обновлено }
+
+    # ── Срез 02: граф ───────────────────────────────────────────────────────────
+    Graph:
+      type: object
+      additionalProperties: false
+      required: [edges]
+      properties:
+        edges:
+          type: array
+          items: { $ref: '#/components/schemas/GraphEdge' }
+
+    GraphEdge:
+      type: object
+      additionalProperties: false
+      required: [consumer, provider, subject, interaction, compatible, last_verdict_at, provider_version]
+      properties:
+        consumer: { type: string }
+        provider: { type: string }
+        subject: { type: string }
+        interaction: { type: string, enum: [sync, async] }
+        compatible: { type: boolean, description: 'Ребро совместимо ⇔ в последнем отчёте нет ошибки с этим субъектом' }
+        last_verdict_at: { type: string, format: date-time, description: generated_at последнего отчёта }
+        provider_version: { type: string, description: provider_version последнего вердикта }
+        stale: { type: boolean, description: captured_hash вердикта не совпал с последним известным хешем спеки поставщика }
+
+    # ── Срез 03: impact ─────────────────────────────────────────────────────────
+    ImpactRequest:
+      type: object
+      additionalProperties: false
+      required: [provider, to_version, from_spec, to_spec]
+      properties:
+        provider: { type: string, minLength: 1 }
+        to_version: { type: string, description: Метка новой версии (коммит/тег) }
+        from_spec: { $ref: '#/components/schemas/SpecSource' }
+        to_spec: { $ref: '#/components/schemas/SpecSource' }
+
+    SpecSource:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      maxProperties: 1
+      description: Ровно один источник спеки — файл или URL (oneOf по ключу).
+      properties:
+        spec_path: { type: string, minLength: 1 }
+        spec_url: { type: string, minLength: 1 }
+
+    BreakingChange:
+      type: object
+      additionalProperties: false
+      required: [provider, affected_consumers]
+      properties:
+        provider: { type: string }
+        from_version: { type: string, description: Из последнего вердикта в хранилище }
+        to_version: { type: string }
+        affected_consumers: { type: array, items: { type: string } }
+        details:
+          type: array
+          items: { $ref: '#/components/schemas/ImpactDetail' }
+
+    ImpactDetail:
+      type: object
+      additionalProperties: false
+      required: [code, message, subject]
+      properties:
+        code: { type: string, description: Код oasdiff-изменения (напр. removed-endpoint, changed-request-field) }
+        message: { type: string }
+        subject: { type: string, description: 'Затронутый субъект `METHOD /path`' }
+
+    # ── Ошибки ──────────────────────────────────────────────────────────────────
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }

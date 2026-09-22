@@ -4,7 +4,7 @@
 
 ## Что это
 
-Координатор графа связей сервисов: принимает отчёты валидаторов в [общем формате](../pinout-openapi/docs/report-format.md), строит граф `consumer↔provider`, детектит breaking-change во времени. Концепт: [`../pinout/README.md`](../pinout/README.md). Эпик **E2** в [`../pinout/backlog.md`](../pinout/backlog.md). Это сетевой сервис (в отличие от CLI `pinout-openapi`).
+Координатор графа связей сервисов: принимает отчёты валидаторов в [общем формате](https://github.com/codemonstersteam/pinout-openapi/blob/main/docs/report-format.md), строит граф `consumer↔provider`, детектит breaking-change во времени. Концепт: [`../pinout/README.md`](../pinout/README.md). Эпик **E2** в [`../pinout/backlog.md`](../pinout/backlog.md). Это сетевой сервис (в отличие от CLI `pinout-openapi`).
 
 ## Разработка: харнес izi
 
