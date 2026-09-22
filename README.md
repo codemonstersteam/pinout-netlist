@@ -80,7 +80,11 @@ curl -s -X POST localhost:8080/reports -d @report.json       # отчёт вал
 curl -s localhost:8080/graph
 ```
 
-Поведение снаружи доказывается [`component-tests/`](component-tests/) (в Docker Compose; полигон E2E — с реальными бинарями обоих валидаторов).
+Поведение снаружи доказывается [`component-tests/`](component-tests/) (в Docker Compose). Полигон E2E тройки (реальные бинари обоих валидаторов из братских репо воркспейса):
+
+```bash
+./component-tests/scripts/run-polygon.sh     # 7 сценариев: отчёты → граф → impact → malformed → свежесть
+```
 
 ## Learn more (retrievability ladder)
 

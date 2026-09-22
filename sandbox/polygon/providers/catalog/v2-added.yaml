@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info: {title: catalog, version: "2.0.0"}
+paths:
+  /items:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sku, qty]
+                properties:
+                  sku: {type: string}
+                  qty: {type: integer}
+  /orders:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sku]
+              properties:
+                sku: {type: string}
+      responses:
+        "201": {description: created}
+  /items/{id}:
+    put:
+      responses:
+        "204": {description: updated}

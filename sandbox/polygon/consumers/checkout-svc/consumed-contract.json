@@ -1,0 +1,7 @@
+{
+  "provenance": { "provider": "catalog", "provider_version": "1.0.0", "captured_hash": "sha256:2222" },
+  "operations": [
+    { "ref": { "path": "/items", "method": "get" }, "sends": {}, "reads": { "sku": "string", "qty": "integer", "eta": "string" } },
+    { "ref": { "path": "/orders", "method": "post" }, "sends": { "sku": "string" }, "reads": {} }
+  ]
+}

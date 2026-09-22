@@ -1,0 +1,67 @@
+# Полигон E2E тройки pinout: netlist + оба валидатора (реальные бинари).
+# Запуск: ./component-tests/scripts/run-polygon.sh
+# Контекст сборки — КОРЕНЬ воркспейса (../..): стейджеры валидаторов собираются
+# из братских репо pinout-openapi / pinout-asyncapi (локаально или в CI, где
+# чекауты лежат рядом).
+name: polygon
+services:
+  service:
+    build:
+      context: ../..
+      dockerfile: pinout-netlist/component-tests/compose/service.Dockerfile
+      args: { PRE: "pinout-netlist/" }
+    environment:
+      PORT: "8080"
+    volumes:
+      - ../../pinout-netlist/sandbox/polygon:/fixtures:ro
+    expose: ["8080"]
+    networks: [test-net]
+
+  tool-openapi:
+    build:
+      context: ../..
+      dockerfile: pinout-netlist/component-tests/compose/validator.Dockerfile
+      args: { REPO: pinout-openapi, NAME: pinout-openapi }
+    volumes:
+      - tools:/tools
+    networks: [test-net]
+
+  tool-asyncapi:
+    build:
+      context: ../..
+      dockerfile: pinout-netlist/component-tests/compose/validator.Dockerfile
+      args: { REPO: pinout-asyncapi, NAME: pinout-asyncapi }
+    volumes:
+      - tools:/tools
+    networks: [test-net]
+
+  runner:
+    build:
+      context: ../..
+      dockerfile: pinout-netlist/component-tests/Dockerfile.runtime
+      args: { PRE: "pinout-netlist/" }
+    environment:
+      SERVICE_BASE_URL: http://service:8080
+      TOOL_OPENAPI: /tools/pinout-openapi
+      TOOL_ASYNCAPI: /tools/pinout-asyncapi
+      GO_TEST_RUN: TestPolygon
+    volumes:
+      - ../../pinout-asyncapi/component-tests/fixtures/validate:/fixtures/validate:ro
+      - ../../pinout-netlist/sandbox/polygon:/fixtures-poly:ro
+      - ./fixtures:/fixtures-ct:ro
+      - tools:/tools
+    depends_on:
+      service:
+        condition: service_healthy
+      tool-openapi:
+        condition: service_completed_successfully
+      tool-asyncapi:
+        condition: service_completed_successfully
+    networks: [test-net]
+
+volumes:
+  tools:
+
+networks:
+  test-net:
+    driver: bridge
