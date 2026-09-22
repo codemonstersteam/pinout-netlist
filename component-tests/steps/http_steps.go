@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/cucumber/godog"
@@ -111,7 +112,8 @@ func (w *World) responseJSONField(field, expected string) error {
 	return nil
 }
 
-// jsonPath — чтение (возможно вложенного) поля по точечному пути: error.code.
+// jsonPath — чтение (возможно вложенного) поля по точечному пути с индексами
+// массивов: error.code, edges[0].compatible, affected_consumers[1].
 func (w *World) jsonPath(path string) (any, bool) {
 	m, err := w.parseJSON()
 	if err != nil {
@@ -119,6 +121,23 @@ func (w *World) jsonPath(path string) (any, bool) {
 	}
 	var cur any = m
 	for _, part := range strings.Split(path, ".") {
+		if idx := strings.Index(part, "["); idx >= 0 && strings.HasSuffix(part, "]") {
+			key := part[:idx]
+			n, convErr := strconv.Atoi(part[idx+1 : len(part)-1])
+			if convErr != nil {
+				return nil, false
+			}
+			obj, ok := cur.(map[string]any)
+			if !ok {
+				return nil, false
+			}
+			arr, ok := obj[key].([]any)
+			if !ok || n < 0 || n >= len(arr) {
+				return nil, false
+			}
+			cur = arr[n]
+			continue
+		}
 		obj, ok := cur.(map[string]any)
 		if !ok {
 			return nil, false

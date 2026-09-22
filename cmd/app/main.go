@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"pinout-netlist/internal/graph"
 	"pinout-netlist/internal/ingest"
 	"pinout-netlist/internal/shared/config"
 	"pinout-netlist/internal/shared/store"
@@ -77,6 +78,15 @@ func main() {
 			return
 		}
 		writeJSON(w, http.StatusAccepted, accepted)
+	})
+
+	// Срез 02: GET /graph — текущий граф рёбер с последним вердиктом.
+	mux.HandleFunc("/graph", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "GET only")
+			return
+		}
+		writeJSON(w, http.StatusOK, graph.ProcessGraph(graph.Deps{Store: st}))
 	})
 
 	// Placeholder: все прочие маршруты → 501, пока их срезы не реализованы.
