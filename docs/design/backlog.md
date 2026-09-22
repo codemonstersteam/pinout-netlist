@@ -22,9 +22,9 @@
 
 ## Зависимости
 
-- Формат входа готов: [`pinout-openapi/docs/report-format.md`](../../../pinout-openapi/docs/report-format.md).
+- Формат входа готов: [`pinout-openapi/docs/report-format.md`](https://github.com/codemonstersteam/pinout-openapi/blob/main/docs/report-format.md).
 - Источники отчётов: E0 (`pinout-asyncapi`) и E1 (`pinout-openapi`).
-- Собственный API: [`api-specification/openapi.yml`](../../api-specification/openapi.yml).
+- Собственный API: [`api-specification/openapi.yaml`](../../api-specification/openapi.yaml).
 
 ## Definition of Done (MVP E2 = T01 + T03)
 
