@@ -38,4 +38,5 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.After(w.afterScenario)
 	w.registerHTTPSteps(ctx)
 	w.registerIngestSteps(ctx)
+	w.registerImpactSteps(ctx)
 }

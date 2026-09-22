@@ -1,6 +1,6 @@
 # Multi-stage build SUT (template-go-api). Контекст — корень репо.
 # CGO=0 — чистый Go placeholder; если добавишь mattn/go-sqlite3, включи CGO.
-FROM golang:1.25-alpine AS build
+FROM golang:1.26-alpine AS build
 WORKDIR /src
 COPY go.mod ./
 COPY go.sum* ./

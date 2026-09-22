@@ -1,0 +1,13 @@
+{
+  "report": {
+    "schema_version": "1.1",
+    "validator": "pinout-openapi",
+    "interaction": "sync",
+    "consumer": { "name": "checkout-svc" },
+    "generated_at": "2026-09-22T10:00:00Z",
+    "compatible": true,
+    "provenance": { "provider": "catalog", "provider_version": "1.0.0", "captured_hash": "sha256:bbb" },
+    "errors": []
+  },
+  "subjects": ["GET /items", "POST /orders"]
+}
