@@ -1,0 +1,14 @@
+consumer:
+  name: checkout-svc
+  consumed_contract_path: /fixtures-poly/consumers/checkout-svc/consumed-contract.json
+  operations:
+    - path: /items
+      method: get
+    - path: /orders
+      method: post
+provider:
+  name: catalog
+  spec_path: /fixtures-poly/providers/catalog/v1.yaml
+settings:
+  save_json_report: false
+  timeout: 5

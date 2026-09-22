@@ -1,11 +1,18 @@
 # godog-раннер. Запускается ТОЛЬКО в Docker (изоляция), не с хоста.
+# PRE — префикс путей внутри контекста сборки: пусто (контекст = корень репо,
+# обычные компонентные тесты) или "pinout-netlist/" (контекст = корень воркспейса,
+# полигон с братскими репо).
+ARG PRE=
 FROM golang:1.26-alpine
 RUN apk add --no-cache bash wget
+ARG PRE
 WORKDIR /tests
-COPY component-tests/go.mod ./
-COPY component-tests/go.sum* ./
+COPY ${PRE}component-tests/go.mod ./
+COPY ${PRE}component-tests/go.sum* ./
 RUN go mod download
-COPY component-tests/steps ./steps
-COPY component-tests/features ./features
+COPY ${PRE}component-tests/steps ./steps
+COPY ${PRE}component-tests/features ./features
+COPY ${PRE}component-tests/features-polygon* ./features-polygon/
 ENV CGO_ENABLED=0
-ENTRYPOINT ["go", "test", "-v", "-count=1", "./steps/..."]
+ENV GO_TEST_RUN=""
+ENTRYPOINT ["sh", "-c", "go test -v -count=1 ${GO_TEST_RUN:+-run ${GO_TEST_RUN}} ./steps/..."]

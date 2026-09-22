@@ -23,3 +23,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: ./component-tests/scripts/run-tests.sh
+  polygon:
+    runs-on: ubuntu-latest
+    steps:
+      # Полигону нужны братские репо (бинари валидаторов собираются из них).
+      - uses: actions/checkout@v5
+        with: { path: pinout-netlist }
+      - uses: actions/checkout@v5
+        with: { repository: codemonstersteam/pinout-openapi, path: pinout-openapi }
+      - uses: actions/checkout@v5
+        with: { repository: codemonstersteam/pinout-asyncapi, path: pinout-asyncapi }
+      - working-directory: pinout-netlist
+        run: ./component-tests/scripts/run-polygon.sh

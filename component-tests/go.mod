@@ -2,7 +2,10 @@ module pinout-netlist/component-tests
 
 go 1.26.0
 
-require github.com/cucumber/godog v0.14.1
+require (
+	github.com/cucumber/godog v0.14.1
+	gopkg.in/yaml.v3 v3.0.1
+)
 
 require (
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect

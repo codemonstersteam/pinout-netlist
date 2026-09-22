@@ -18,6 +18,7 @@ services:
       dockerfile: component-tests/Dockerfile.runtime
     environment:
       SERVICE_BASE_URL: http://service:8080
+      GO_TEST_RUN: TestFeatures
     volumes:
       - ./fixtures:/fixtures:ro
     depends_on:
