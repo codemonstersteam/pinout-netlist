@@ -1,0 +1,27 @@
+# Компонентные тесты pinout-netlist. Запуск: ./scripts/run-tests.sh
+# service = SUT, runner = godog в контейнере (фикстуры — read-only volume).
+name: component-tests
+services:
+  service:
+    build:
+      context: ..
+      dockerfile: component-tests/compose/service.Dockerfile
+    environment:
+      PORT: "8080"
+    expose: ["8080"]
+    networks: [test-net]
+  runner:
+    build:
+      context: ..
+      dockerfile: component-tests/Dockerfile.runtime
+    environment:
+      SERVICE_BASE_URL: http://service:8080
+    volumes:
+      - ./fixtures:/fixtures:ro
+    depends_on:
+      service:
+        condition: service_healthy
+    networks: [test-net]
+networks:
+  test-net:
+    driver: bridge

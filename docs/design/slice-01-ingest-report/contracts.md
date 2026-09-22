@@ -37,7 +37,7 @@
 
 | # | Сценарий | exit-статус | Утверждение | тег |
 |---|---|---|---|---|
-| 1 | валидный sync-отчёт → ingest | 202 | `edges_accepted ≥ 1`; ребро в `/graph` с `compatible` и `last_verdict_at` | accepted |
+| 1 | валидный sync-отчёт → ingest | 202 | `edges_accepted ≥ 1` (проверка ребра в `/graph` — сценарий среза 02: один срез не assertions-ит чужой ингресс) | accepted |
 | 2 | неканонический отчёт (нет provenance / exit-3-конверт / битый JSON) | 400 | `error.code == "BAD_REPORT"` | accepted |
 | 3 | `schema_version: "1.0"` | 409 | `error.code == "UNSUPPORTED_SCHEMA_VERSION"` | accepted |
 
@@ -49,7 +49,6 @@ Feature: Ingest validator reports (canon 1.1)
     Given запущенный сервис netlist
     When клиент отправляет POST /reports с валидным sync-отчётом 1.1 и субъектами
     Then ответ 202 и edges_accepted >= 1
-    And GET /graph содержит ребро с consumer, provider, subject и compatible
 
   Scenario: неканонический отчёт отвергнут
     When клиент отправляет POST /reports с отчётом без provenance
